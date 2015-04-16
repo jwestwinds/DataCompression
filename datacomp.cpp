@@ -27,7 +27,7 @@ struct char_freq
 {
     vector<char> lets; //characters in present probability
     
-    int freq = 1; //how many times it occurs
+    int freq; //how many times it occurs
     
     char_freq()
     {}
@@ -35,6 +35,7 @@ struct char_freq
     char_freq(char i)
     {
         lets.push_back(i);
+        freq = 1;
     }
     
     char_freq(char i, int f)
@@ -140,6 +141,7 @@ int main()
     vector<char_freq> s_freq;
     
     s_freq = sort(frequency);
+    frequency = s_freq;
     
     cout << "SORTED FREQ:\n";
     for(int j = 0; j < s_freq.size(); ++j)
@@ -156,8 +158,10 @@ int main()
     
     //Probability time
     //Let's pop the last two elements
+    int step = 1;
     while(s_freq.size() > 1)
     {
+        
         
         char_freq min1 = s_freq.back();
         s_freq.pop_back();
@@ -199,7 +203,8 @@ int main()
         s_freq.push_back(min3);
         s_freq = sort(s_freq);
         
-        cout << "NEW SORTED ARRAY AFTER This STEP:\n";
+        cout << "NEW SORTED ARRAY AFTER " << step++ << " STEP:\n";
+        
         for(int j = 0; j < s_freq.size(); ++j)
         {
             for(int i = 0; i < s_freq.at(j).lets.size(); ++i)
@@ -209,12 +214,28 @@ int main()
         
         cout << "NEW LANG:\n";
         for(int j = 0; j < language.size(); ++j)
-        {
             cout << language.at(j).let << ", " << language.at(j).code << endl;
-            
-        }
         
     }
+    
+    //If only 1 letter in language
+    if(language.size() == 1)
+        language.at(0).code="1";
+    
+    
+    //Calculate expected word length
+    
+    float exp = 0;
+    for(int j = 0; j < frequency.size(); ++j)
+    {
+        exp += (frequency.at(j).freq)*(language.at(j).code.size());
+    }
+    
+    exp = exp/word.size();
+    
+    cout << "EXPECTED CODEWORD LENGTH:\n" << exp << endl;
+    
+
     
     string codeword;
     
@@ -222,12 +243,53 @@ int main()
     {
         char chosen = word[i];
         codeword += encode(chosen);
-        
     }
     
     
     
     cout << "ENCODED MESSAGE:\n" << codeword << endl;
+    
+    
+    //PART 3: Decoding Huffman's Algortithm
+    
+    //Make a vector of sizes for the codes
+    vector<int> sizes;
+    
+    for(int j = 0; j < language.size(); ++j)
+    {
+        int f = language.at(j).code.size();
+        
+        if(sizes.empty())
+            sizes.push_back(f);
+        else if(sizes.back() < f)
+            sizes.push_back(f);
+    }
+    
+    //Start decoding
+    
+    string newword;
+    string sub_code;
+    string a_codeword = codeword;
+    
+    while(a_codeword.size() != 0)
+        for(int i =0; i < sizes.size(); ++i)
+        {
+            sub_code = a_codeword.substr(0, sizes.at(i));
+            
+            for(int j = 0; j < language.size(); ++j)
+                if(language.at(j).code == sub_code)
+                {
+                    newword += language.at(j).let;
+                    a_codeword = a_codeword.substr(sizes.at(i));
+                    cout << "New codeword: " << a_codeword << endl;
+                    break;
+                }
+        }
+    
+    cout << endl << "TRANSLATION:\n" << newword << endl << endl;
+    
+    
+    
     
     return 0;
 }
