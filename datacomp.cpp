@@ -1,3 +1,10 @@
+//CHANGES/IMPROVEMENTS TO MAKE:
+//
+// *make able to read in spacebar
+// *add file input capability
+// *try with grouping : 2, 3 letters, words
+//
+
 #include <stdio.h>
 #include <string>
 #include <iostream>
@@ -92,42 +99,89 @@ string encode(char c)
 }
 
 
-int main()
+int main(int argc, char *argv[])
 {
     string word; //input
     unsigned long size; //size of word
     
-    cin.clear();
-    cin >> word;
-    size = word.size();
+    char letter;
     
+    cout << argc;
     
-    // PART 1: Parsing the input and filling our language as well as tracking our frequencies
+    ifstream myfile;
     
-    for(int i = 0; i < size; ++i)
+    if(argc > 1)
     {
-        char chosen = word[i];
-        bool in_lang = false;
+        string filedat = argv[1];
+        myfile.open(argv[1]);
         
-        
-        for(int j = 0; j < language.size(); ++j)
-            if(language.at(j).let == chosen)
-            {
-                in_lang = true;
-                frequency.at(j).freq = frequency.at(j).freq + 1;
-            }
-        
-        
-        if(!in_lang)
+        while(myfile.get(letter))
         {
-            char_lang a(chosen);
-            char_freq b(chosen);
-            language.push_back(a);
-            frequency.push_back(b);
+            size++;
+            word += letter;
+            bool in_lang = false;
+            
+            
+            for(int j = 0; j < language.size(); ++j)
+                if(language.at(j).let == letter)
+                {
+                    in_lang = true;
+                    frequency.at(j).freq = frequency.at(j).freq + 1;
+                }
+            
+            
+            if(!in_lang)
+            {
+                char_lang a(letter);
+                char_freq b(letter);
+                language.push_back(a);
+                frequency.push_back(b);
+            }
+
         }
         
+        myfile.close();
+        
+    }
+    
+    
+    else
+    {
+    
+        cin.clear();
+        cin >> word;
+        size = word.size();
         
         
+        
+        
+        // PART 1: Parsing the input and filling our language as well as tracking our frequencies
+        
+        for(int i = 0; i < size; ++i)
+        {
+            char chosen = word[i];
+            bool in_lang = false;
+            
+            
+            for(int j = 0; j < language.size(); ++j)
+                if(language.at(j).let == chosen)
+                {
+                    in_lang = true;
+                    frequency.at(j).freq = frequency.at(j).freq + 1;
+                }
+            
+            
+            if(!in_lang)
+            {
+                char_lang a(chosen);
+                char_freq b(chosen);
+                language.push_back(a);
+                frequency.push_back(b);
+            }
+            
+            
+            
+        }
     }
     
     cout << "FREQ:\n";
@@ -203,24 +257,17 @@ int main()
         s_freq.push_back(min3);
         s_freq = sort(s_freq);
         
-        cout << "NEW SORTED ARRAY AFTER " << step++ << " STEP:\n";
-        
-        for(int j = 0; j < s_freq.size(); ++j)
-        {
-            for(int i = 0; i < s_freq.at(j).lets.size(); ++i)
-                cout << s_freq.at(j).lets.at(i) << ", ";
-            cout<< s_freq.at(j).freq << endl;
-        }
-        
-        cout << "NEW LANG:\n";
-        for(int j = 0; j < language.size(); ++j)
-            cout << language.at(j).let << ", " << language.at(j).code << endl;
-        
     }
     
     //If only 1 letter in language
     if(language.size() == 1)
         language.at(0).code="1";
+    
+    cout << "NEW LANG:\n";
+    for(int j = 0; j < language.size(); ++j)
+    {
+        cout << language.at(j).let << ", " << language.at(j).code << endl;
+    }
     
     
     //Calculate expected word length
@@ -234,24 +281,52 @@ int main()
     exp = exp/word.size();
     
     cout << "EXPECTED CODEWORD LENGTH:\n" << exp << endl;
-    
 
+    
+    
+    ofstream filemyne;
+    filemyne.open ("test0.txt");
+    
+    
+    cout.flush();
+    
+    
     
     string codeword;
     
-    for(int i = 0; i < size; ++i)
+    if(argc > 1)
     {
-        char chosen = word[i];
-        codeword += encode(chosen);
+        myfile.open(argv[1]);
+        
+        while(myfile.get(letter))
+            filemyne << encode(letter);
+        
+        myfile.close();
+        
     }
     
+
+    
+    else
+        for(int i = 0; i < size; ++i)
+        {
+            char chosen = word[i];
+            filemyne << encode(chosen);
+        }
+    
+    filemyne.close();
+    cout << "encode done";
+    cout.flush();
     
     
-    cout << "ENCODED MESSAGE:\n" << codeword << endl;
-    
-    
-    //PART 3: Decoding Huffman's Algortithm
-    
+
+//    
+//    
+//    //PART 3: Decoding Huffman's Algortithm
+//    
+//    
+//
+//    
     //Make a vector of sizes for the codes
     vector<int> sizes;
     
@@ -264,32 +339,43 @@ int main()
         else if(sizes.back() < f)
             sizes.push_back(f);
     }
-    
+
     //Start decoding
     
     string newword;
     string sub_code;
-    string a_codeword = codeword;
+    int cursize;
     
-    while(a_codeword.size() != 0)
-        for(int i =0; i < sizes.size(); ++i)
+    myfile.open("test0.txt");
+    filemyne.open ("test55.mp3");
+    
+    bool lettergot = false;
+    int index = 0;
+    
+    while(!myfile.eof())
+    {
+        lettergot = false;
+        cout << index++;
+        
+        while(!myfile.eof())
         {
-            sub_code = a_codeword.substr(0, sizes.at(i));
+            myfile.get(letter);
+            newword+=letter;
             
             for(int j = 0; j < language.size(); ++j)
-                if(language.at(j).code == sub_code)
+                if(language.at(j).code == newword)
                 {
-                    newword += language.at(j).let;
-                    a_codeword = a_codeword.substr(sizes.at(i));
-                    cout << "New codeword: " << a_codeword << endl;
+                    filemyne << language.at(j).let;
+                    lettergot = true;
+                    cout << language.at(j).let;
+                    newword = "";
                     break;
                 }
         }
-    
-    cout << endl << "TRANSLATION:\n" << newword << endl << endl;
-    
-    
-    
+    }
+
+    myfile.close();
+    filemyne.close();
     
     return 0;
 }
