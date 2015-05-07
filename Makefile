@@ -3,15 +3,10 @@
 ##
 ## This file does not need to be modified
 #########################################
-
-decomp: decomp.o
-        g++ -ggdb decomp.o –o decomp
-datacomp: datacomp.o
-        g++ -ggdb datacomp.o –o datacomp
-decomp.o: decomp.cpp
-	g++ -ggdb -c decomp.cpp 
-datacomp.o: datacomp.cpp
-	g++ -ggdb -c datacomp.cpp
-
+all: decomp datacomp
+decomp: decomp.cpp
+	g++ -ggdb decomp.cpp -o dec
+datacomp: datacomp.cpp
+	g++ -ggdb datacomp.cpp -o dac
 clean:
-	rm -f *~ *.o *.out binary.cpp char.cpp output.cpp
+	rm -f *~ *.o *.out binary.cpp char.cpp output.cpp dac dec
