@@ -1,5 +1,7 @@
 //CHANGES/IMPROVEMENTS TO MAKE:
 //
+//GREAT, BUT DOESN'T GET LAST CHAR. FIX THIS.
+//
 // *make able to read in spacebar
 // *add file input capability
 // *try with grouping : 2, 3 letters, words
@@ -23,9 +25,15 @@ struct char_lang
     
     string code; //Binary assignment
     
+    int bin; //code's binary equivilent
+    
+    int size; //# of bits in binary assignment
+    
     char_lang(char i)
     :let(i)
-    {}
+    {
+        bin = 0;
+    }
     
 };
 
@@ -54,7 +62,25 @@ struct char_freq
 };
 
 vector<char_lang> language;
+vector<char_lang> newlang;
 vector<char_freq> frequency;
+
+void code2bit(char_lang &cl)
+{
+    int pow2 = 1;
+    
+    cl.size = cl.code.size();
+    
+    for(int i = cl.code.size() - 1; i >= 0; --i)
+    {
+        
+        if(cl.code[i] == '1')
+        {
+            cl.bin = cl.bin+pow2;
+        }
+        pow2 = pow2*2;
+    }
+}
 
 
 int ext_max(vector<char_freq> inp)
@@ -98,6 +124,69 @@ string encode(char c)
     return "";
 }
 
+int bintoint(string bin)
+{
+    int it = 1;
+    int to = 0;
+    for(int i = 7; i >= 0 ; --i)
+    {
+        if(bin[i] == '1')
+            to += it;
+        
+        it = it*2;
+        
+    }
+    return to;
+}
+
+string inttobin(int rigbin)
+{
+    int obin = rigbin;
+    int powa = 128;
+    string bin = "";
+    int frabin;
+    
+    if(obin >= 0)
+    {
+        while(bin.size() < 8)
+        {
+            if(obin - powa >= 0)
+            {
+                obin-=powa;
+                bin+="1";
+            }
+            
+            else
+                bin+="0";
+            
+            powa = powa/2;
+        }
+    }
+    
+    else
+    {
+        obin = obin - 2*obin;
+        obin = 256 - obin;
+        
+        while(bin.size() < 8)
+        {
+            if(obin - powa >= 0)
+            {
+                obin-=powa;
+                bin+="1";
+            }
+            
+            else
+                bin+="0";
+            
+            powa = powa/2;
+        }
+    }
+    
+    return bin;
+}
+
+
 
 int main(int argc, char *argv[])
 {
@@ -121,14 +210,12 @@ int main(int argc, char *argv[])
             word += letter;
             bool in_lang = false;
             
-            
             for(int j = 0; j < language.size(); ++j)
                 if(language.at(j).let == letter)
                 {
                     in_lang = true;
                     frequency.at(j).freq = frequency.at(j).freq + 1;
                 }
-            
             
             if(!in_lang)
             {
@@ -137,11 +224,8 @@ int main(int argc, char *argv[])
                 language.push_back(a);
                 frequency.push_back(b);
             }
-
         }
-        
         myfile.close();
-        
     }
     
     
@@ -151,9 +235,6 @@ int main(int argc, char *argv[])
         cin.clear();
         cin >> word;
         size = word.size();
-        
-        
-        
         
         // PART 1: Parsing the input and filling our language as well as tracking our frequencies
         
@@ -178,9 +259,6 @@ int main(int argc, char *argv[])
                 language.push_back(a);
                 frequency.push_back(b);
             }
-            
-            
-            
         }
     }
     
@@ -215,18 +293,10 @@ int main(int argc, char *argv[])
     int step = 1;
     while(s_freq.size() > 1)
     {
-        
-        
         char_freq min1 = s_freq.back();
         s_freq.pop_back();
         char_freq min2 = s_freq.back();
         s_freq.pop_back();
-        
-        /*cout << "2 min popped:\n";
-         
-         for(int j = 0; j < s_freq.size(); ++j)
-         cout << s_freq.at(j).lets.at(0) << ", " << s_freq.at(j).freq << endl;*/
-        
         char_freq min3;
         min3.freq = min1.freq + min2.freq;
         
@@ -266,7 +336,8 @@ int main(int argc, char *argv[])
     cout << "NEW LANG:\n";
     for(int j = 0; j < language.size(); ++j)
     {
-        cout << language.at(j).let << ", " << language.at(j).code << endl;
+        code2bit(language.at(j));
+        cout << language.at(j).let << ", " << language.at(j).code << ", " << language.at(j).bin << ", " << language.at(j).size << endl;
     }
     
     
@@ -274,44 +345,100 @@ int main(int argc, char *argv[])
     
     float exp = 0;
     for(int j = 0; j < frequency.size(); ++j)
-    {
         exp += (frequency.at(j).freq)*(language.at(j).code.size());
-    }
     
     exp = exp/word.size();
     
     cout << "EXPECTED CODEWORD LENGTH:\n" << exp << endl;
 
-    
-    
     ofstream filemyne;
-    filemyne.open ("test0.txt");
+    filemyne.open ("binary.cpp");
     
+    //Make a vector of sizes for the codes
+    vector<int> sizes;
+    vector<int> sizefreq;
     
-    cout.flush();
+    for(int j = 0; j < language.size(); ++j)
+    {
+        int f = language.at(j).code.size();
+        
+        if(sizes.empty())
+        {
+            sizes.push_back(f);
+            sizefreq.push_back(1);
+        }
+        else if(sizes.back() < f)
+        {
+            sizes.push_back(f);
+            sizefreq.push_back(1);
+        }
+        else
+        {
+            sizefreq.back()++;
+        }
+    }
     
+    string allcode = "";
+    int alpha = language.size();
+    string alphasize = inttobin(alpha);
+    filemyne << alphasize; //
+    for(int i = 0; i < alpha; ++i)
+    {
+        filemyne << inttobin((int)language.at(i).let);
+    }
     
+    for(int i = 0; i < sizes.size(); ++i)
+    {
+        string si = inttobin(sizes.at(i));
+        string sf = inttobin(sizefreq.at(i));
+        filemyne << si << sf;
+    }
+    
+    for(int i = 0; i < alpha; ++i)
+    {
+        allcode += language.at(i).code;
+    }
+    
+    while(allcode.size()%8 != 0)
+    {
+        allcode+="0";
+    }
+    
+    cout << "ALL CODEWORDS: " << allcode << endl;
+    string char_allcode = "";
+    
+    while(allcode!="")
+    {
+        string suball = allcode;
+        suball.resize(8);
+        int sublang = bintoint(suball);
+        char charsublang = (char) sublang;
+        char_allcode += charsublang;
+        filemyne << suball;
+        allcode.erase(0,8);
+    }
+    
+    cout <<  "char rep of allcode: " << char_allcode << endl << endl;
     
     string codeword;
     
     if(argc > 1)
     {
         myfile.open(argv[1]);
-        
         while(myfile.get(letter))
-            filemyne << encode(letter);
-        
+        {
+            string fa = encode(letter);
+            filemyne << fa;
+        }
         myfile.close();
-        
     }
-    
-
     
     else
         for(int i = 0; i < size; ++i)
         {
             char chosen = word[i];
-            filemyne << encode(chosen);
+            string fa = encode(chosen);
+            filemyne << fa;
         }
     
     filemyne.close();
@@ -319,63 +446,150 @@ int main(int argc, char *argv[])
     cout.flush();
     
     
+    ////////////////conversion to char
+    
+    filemyne.open("char.cpp");
+    myfile.open("binary.cpp");
+    
+    int placesadded = 0;
+    char getter;
+    string charrep = "";
+    bool endf = false;
+    
+    while(!myfile.eof() && !endf)
+    {
+        
+        charrep = "";
+        for(int i = 0; i < 8; ++i)
+        {
+            myfile.get(getter);
+            if(myfile.eof())
+            {
+                endf = true;
+                break;
+            }
+            charrep+=getter;
+            
 
-//    
+        }
+        
+        if(charrep.size() < 8)
+            while(charrep.size() != 8)
+            {
+                charrep += "0";
+                placesadded++;
+            }
+        
+        
+        int binar = bintoint(charrep);
+        
+        char binchar = (char) binar;
+        filemyne << binchar;
+        
+    }
+    
+    filemyne.close();
+    myfile.close();
+    
 //    
 //    //PART 3: Decoding Huffman's Algortithm
-//    
-//    
 //
 //    
-    //Make a vector of sizes for the codes
-    vector<int> sizes;
-    
-    for(int j = 0; j < language.size(); ++j)
-    {
-        int f = language.at(j).code.size();
-        
-        if(sizes.empty())
-            sizes.push_back(f);
-        else if(sizes.back() < f)
-            sizes.push_back(f);
-    }
-
-    //Start decoding
-    
-    string newword;
-    string sub_code;
-    int cursize;
-    
-    myfile.open("test0.txt");
-    filemyne.open ("test55.mp3");
-    
-    bool lettergot = false;
-    int index = 0;
-    
-    while(!myfile.eof())
-    {
-        lettergot = false;
-        cout << index++;
-        
-        while(!myfile.eof())
-        {
-            myfile.get(letter);
-            newword+=letter;
-            
-            for(int j = 0; j < language.size(); ++j)
-                if(language.at(j).code == newword)
-                {
-                    filemyne << language.at(j).let;
-                    lettergot = true;
-                    cout << language.at(j).let;
-                    newword = "";
-                    break;
-                }
-        }
-    }
-
-    myfile.close();
-    filemyne.close();
-    
+//    myfile.open("char.cpp");
+//    filemyne.open ("output.cpp");
+//    
+//    string binaa = "";
+//    char la, ra, ga;
+//    myfile.get(la);
+//    int lar = (int) la;
+//    cout << "THIS IS OUR LANGUAGE SIZE: " << lar << endl;
+//    for(int i = 0; i < lar; ++i)
+//    {
+//        myfile.get(la);
+//        char_lang a(la);
+//        newlang.push_back(a);
+//    }
+//    
+//    
+//    //cout << "Here are the sizes of out codes: ";
+//    int ls = 0;
+//    int total_lang_size = 0;
+//    while(ls < lar)
+//    {
+//        myfile.get(la); //size
+//        myfile.get(ra); //number of times size occurs
+//        int size_char = (int) la;
+//        int num_size_char = (int) ra;
+//        
+//        for(int i = ls; i < ls+num_size_char; ++i)
+//            newlang.at(i).size = size_char;
+//        
+//        total_lang_size += size_char*num_size_char;
+//        ls+=num_size_char;
+//    }
+//    
+//    cout << "Here is our language and the sizes of each codeword:" << endl;
+//    for(int i = 0; i < newlang.size(); ++i)
+//        cout << newlang.at(i).let << ", " << newlang.at(i).size << endl;
+//    
+//    string hallcode = "";
+//    
+//    while(hallcode.size()*8 < total_lang_size)
+//    {
+//        myfile.get(la);
+//        hallcode+=la;
+//    }
+//    
+//    string binhallcode = "";
+//    
+//    for(int i = 0; i < hallcode.size(); ++i)
+//    {
+//        binhallcode+= inttobin((int) hallcode.at(i));
+//    }
+//    
+//    cout << "SHOULD BE EQUAL TO ALLCODE: " << binhallcode << endl;
+//    
+//    
+//    for(int i = 0; i < newlang.size(); ++i)
+//    {
+//        string bhc = binhallcode;
+//        bhc.resize(newlang.at(i).size);
+//        //cout << bhc << endl;
+//        newlang.at(i).code = bhc;
+//        binhallcode.erase(0, bhc.size());
+//    }
+//    
+//    cout << "NEW LANG:\n";
+//    for(int j = 0; j < newlang.size(); ++j)
+//        cout << newlang.at(j).let << ", " << newlang.at(j).code << ", " << newlang.at(j).size << endl;
+//
+//    
+//    while(!myfile.eof())
+//    {
+//        
+//        
+//        while(binaa.size() < sizes.back())
+//        {
+//            myfile.get(letter);
+//            int tho = (int)letter;
+//            binaa += inttobin(tho);
+//        }
+//        
+//        for(int j = 0; j < newlang.size(); ++j)
+//        {
+//            string binari = binaa;
+//            binari.resize(newlang.at(j).code.size());
+//            if(binari == newlang.at(j).code)
+//            {
+//                filemyne << newlang.at(j).let;
+//                cout << newlang.at(j).let;
+//                binaa.erase(0, newlang.at(j).code.size());
+//                break;
+//            }
+//        }
+//    }
+//
+//    filemyne.close();
+//    myfile.close();
     return 0;
 }
