@@ -127,16 +127,24 @@ int bintoint(string bin)
 {
     int it = 1;
     int to = 0;
-    for(int i = 7; i >= 0 ; --i)
+    for(int i = bin.size() - 1; i >= 0 ; --i)
     {
+        cout << "bin rep & increm: " << bin[i] << " " << it << endl;
+        
         if(bin[i] == '1')
+        {
             to += it;
+            
+        }
         
         it = it*2;
         
+        cout << to << endl;
     }
+    
     return to;
 }
+
 
 string inttobin(int rigbin)
 {
@@ -185,6 +193,53 @@ string inttobin(int rigbin)
     return bin;
 }
 
+string intto8bin(int rigbin)
+{
+    int pow2 = pow(2, 15);
+    string output = "";
+    //cout << pow2;
+    
+    while(rigbin >= 0)
+    {
+        if(rigbin - pow2 >= 0)
+        {
+            output += "1" ;
+            rigbin -= pow2;
+        }
+        
+        else
+        {
+            output += "0";
+        }
+        
+        if(pow2 ==1)
+            break;
+        
+        pow2 = pow2/2;
+        
+        
+    }
+    
+    return output;
+    
+}
+
+string chartobin(char a)
+{
+    string strn = "";
+    
+    for (int i = 0; i < 8; i++)
+    {
+        int j = (a & (1 << (7 - i)));
+        
+        if(j==0)
+            strn+="0";
+        else
+            strn+="1";
+    }
+    
+    return strn;
+}
 
 
 int main(int argc, char *argv[])
@@ -210,12 +265,26 @@ int main(int argc, char *argv[])
     ofstream filemyne;
     
     myfile.open(charfile);
-    filemyne.open ("output.cpp");
+    filemyne.open ("output.png");
 
     string binaa = "";
-    char la, ra, ga;
+    char la, al, ra, ga;
+    int lsiz;
     myfile.get(la);
-    int lar = (int) la;
+    cout << la;
+    myfile.get(al);
+    cout << al;
+    
+    cout << la << al;
+    
+    string las = chartobin(la);
+    string als = chartobin(al);
+    cout << las;
+    cout << als;
+    string lasals = las+als;
+    
+    int lar = bintoint(lasals);
+    //int lar = (int) la;
     cout << "THIS IS OUR LANGUAGE SIZE: " << lar << endl;
     for(int i = 0; i < lar; ++i)
     {
@@ -228,17 +297,22 @@ int main(int argc, char *argv[])
     //cout << "Here are the sizes of out codes: ";
     int ls = 0;
     int total_lang_size = 0;
+
     while(ls < lar)
     {
         myfile.get(la); //size
+        
         myfile.get(ra); //number of times size occurs
         int size_char = (int) la;
+        
+        
         int num_size_char = (int) ra;
         
         for(int i = ls; i < ls+num_size_char; ++i)
             newlang.at(i).size = size_char;
         
         total_lang_size += size_char*num_size_char;
+
         ls+=num_size_char;
     }
 

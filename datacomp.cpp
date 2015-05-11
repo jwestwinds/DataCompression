@@ -186,7 +186,48 @@ string inttobin(int rigbin)
     return bin;
 }
 
+string intto8bin(int rigbin)
+{
+    int pow2 = pow(2, 15);
+    string output = "";
+    //cout << pow2;
+    
+    while(rigbin >= 0)
+    {
+        if(rigbin - pow2 >= 0)
+        {
+            output += "1" ;
+            rigbin -= pow2;
+        }
+        
+        else
+            output += "0";
+        
+        if(pow2 ==1)
+            break;
+        pow2 = pow2/2;
+    }
+    
+    return output;
+    
+}
 
+string chartobin(char a)
+{
+    string strn = "";
+    
+    for (int i = 0; i < 8; i++)
+    {
+        int j = (a & (1 << (7 - i)));
+        
+        if(j==0)
+            strn+="0";
+        else
+            strn+="1";
+    }
+    
+    return strn;
+}
 
 int main(int argc, char *argv[])
 {
@@ -350,6 +391,7 @@ int main(int argc, char *argv[])
     exp = exp/word.size();
     
     cout << "EXPECTED CODEWORD LENGTH:\n" << exp << endl;
+    cout << "LANGUAGE SIZE: " << language.size() << endl;
 
     ofstream filemyne;
     filemyne.open ("binary.cpp");
@@ -380,8 +422,24 @@ int main(int argc, char *argv[])
     
     string allcode = "";
     int alpha = language.size();
-    string alphasize = inttobin(alpha);
-    filemyne << alphasize; //
+    
+    string alphasize = intto8bin(alpha);
+    
+    cout << "INT REP OF ALPHASIZE:   " << alphasize << endl;
+    //string alpha1 = alphasize.substr(0, 8);
+    //alphasize.erase(0,8);
+    //string alpha2 =alphasize;
+    
+    //int alphac = bintoint(alpha1);
+    //char alpha1c = (char) alphac;
+    
+    //alphac = bintoint(alpha2);
+    //char alpha2c = (char) alphac;
+    
+    //cout << alpha1c << alpha2c << endl;
+    
+    
+    filemyne << alphasize; //fhqnilugefqiulwa vqtlwhvgaulVBHAETHQE
     for(int i = 0; i < alpha; ++i)
     {
         filemyne << inttobin((int)language.at(i).let);
